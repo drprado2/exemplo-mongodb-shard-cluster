@@ -1,0 +1,138 @@
+﻿version: "3.7"
+
+services:
+  mongo-config-server-1:
+    image: mongo:latest
+    container_name: mongo-config-server-1
+    command: --configsvr --replSet conf --port 26051 --logpath /data/db/log.cfg0 --logappend
+    ports:
+      - 26051:26051
+    volumes:
+      - mongo-config-server-1-store:/data/db
+    networks:
+      - mongonetwork
+
+  mongo-config-server-2:
+    image: mongo:latest
+    container_name: mongo-config-server-2
+    command: --configsvr --replSet conf --port 26052 --logpath /data/db/log.cfg1 --logappend
+    ports:
+      - 26052:26052
+    volumes:
+      - mongo-config-server-2-store:/data/db
+    networks:
+      - mongonetwork
+
+  mongo-config-server-3:
+    image: mongo:latest
+    container_name: mongo-config-server-3
+    command: --configsvr --replSet conf --port 26053 --logpath /data/db/log.cfg2 --logappend
+    ports:
+      - 26053:26053
+    volumes:
+      - mongo-config-server-3-store:/data/db
+    networks:
+      - mongonetwork
+      
+  mongo-shard-server-1:
+    image: mongo:latest
+    container_name: mongo-shard-server-1
+    command: --shardsvr --port 28051 --logpath /data/db/log_s1.txt --logappend --oplogSize 50 --replSet rs-shard-1
+    ports:
+      - 28051:28051
+    volumes:
+      - mongo-shard-server-1-store:/data/db
+    networks:
+      - mongonetwork
+        
+  mongo-shard-server-1-repl:
+    image: mongo:latest
+    container_name: mongo-shard-server-1-repl
+    command: --shardsvr --port 28052 --logpath /data/db/log_s1.txt --logappend --oplogSize 50 --replSet rs-shard-1
+    ports:
+      - 28052:28052
+    volumes:
+      - mongo-shard-server-repl-1-store:/data/db
+    networks:
+      - mongonetwork
+
+  mongo-shard-server-2:
+    image: mongo:latest
+    container_name: mongo-shard-server-2
+    command: --shardsvr --port 28053 --logpath /data/db/log_s2.txt --logappend --oplogSize 50 --replSet rs-shard-2
+    ports:
+      - 28053:28053
+    volumes:
+      - mongo-shard-server-2-store:/data/db
+    networks:
+      - mongonetwork
+
+  mongo-shard-server-2-repl:
+    image: mongo:latest
+    container_name: mongo-shard-server-2-repl
+    command: --shardsvr --port 28054 --logpath /data/db/log_s2.txt --logappend --oplogSize 50 --replSet rs-shard-2
+    ports:
+      - 28054:28054
+    volumes:
+      - mongo-shard-server-repl-2-store:/data/db
+    networks:
+      - mongonetwork
+
+  mongo-shard-server-3:
+    image: mongo:latest
+    container_name: mongo-shard-server-3
+    command: --shardsvr --port 28055 --logpath /data/db/log_s3.txt --logappend --oplogSize 50 --replSet rs-shard-3
+    ports:
+      - 28055:28055
+    volumes:
+      - mongo-shard-server-3-store:/data/db
+    networks:
+      - mongonetwork
+    
+  mongo-shard-server-3-repl:
+    image: mongo:latest
+    container_name: mongo-shard-server-3-repl
+    command: --shardsvr --port 28056 --logpath /data/db/log_s3.txt --logappend --oplogSize 50 --replSet rs-shard-3
+    ports:
+      - 28056:28056
+    volumes:
+      - mongo-shard-server-repl-3-store:/data/db
+    networks:
+      - mongonetwork
+
+  mongo-router-server:
+    image: mongo:latest
+    container_name: mongo-router-server
+    command: mongos --port 27000 --configdb conf/mongo-config-server-1:26051,mongo-config-server-2:26052,mongo-config-server-3:26053 --logpath /data/db/log.mongos0 --bind_ip_all
+    ports:
+      - 27000:27000
+    volumes:
+      - mongo-router-server-store:/data/db
+    networks:
+      - mongonetwork
+
+networks:
+  mongonetwork:
+    
+volumes:
+  mongo-config-server-1-store:
+    driver: local
+  mongo-config-server-2-store:
+    driver: local
+  mongo-config-server-3-store:
+    driver: local
+  mongo-shard-server-1-store:
+    driver: local
+  mongo-shard-server-repl-1-store:
+    driver: local
+  mongo-shard-server-2-store:
+    driver: local
+  mongo-shard-server-repl-2-store:
+    driver: local
+  mongo-shard-server-3-store:
+    driver: local
+  mongo-shard-server-repl-3-store:
+    driver: local
+  mongo-router-server-store:
+    driver: local
+
