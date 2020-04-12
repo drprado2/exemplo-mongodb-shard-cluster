@@ -3,7 +3,7 @@
 O repositório foi criado para mostrar um exemplo de uma configuração completa de um Cluster MongoDB, a configuração conta com:
 
   - **3** replicas de servidores mongo de configuração
-  - **3** servidores de shard com **1** replica cada
+  - **3** servidores de shard com **2** replicas cada
   - **1** servidor de roteamento
   - Totalizando **10** aplicações rodando no cluster
  
