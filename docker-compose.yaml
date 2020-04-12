@@ -1,9 +1,12 @@
 ﻿version: "3.7"
 
 services:
+  # Servidores de configuração, são instancias do mongodb também porém o parâmetro --configsvr faz eles serem servidores de configuração
+  # Pelo menos 1 instancia de servidor de configuração é obrigatório para o cluster funcionar, pois tais servidores sabem em quais nodes estão os shards das collections
   mongo-config-server-1:
     image: mongo:latest
     container_name: mongo-config-server-1
+    # O comando --replSet conf faz esse node ser parte do replicaSet que chama "conf"
     command: --configsvr --replSet conf --port 26051 --logpath /data/db/log.cfg0 --logappend
     ports:
       - 26051:26051
@@ -15,6 +18,7 @@ services:
   mongo-config-server-2:
     image: mongo:latest
     container_name: mongo-config-server-2
+    # O comando --replSet conf faz esse node ser parte do replicaSet que chama "conf"
     command: --configsvr --replSet conf --port 26052 --logpath /data/db/log.cfg1 --logappend
     ports:
       - 26052:26052
@@ -26,6 +30,7 @@ services:
   mongo-config-server-3:
     image: mongo:latest
     container_name: mongo-config-server-3
+    # O comando --replSet conf faz esse node ser parte do replicaSet que chama "conf"
     command: --configsvr --replSet conf --port 26053 --logpath /data/db/log.cfg2 --logappend
     ports:
       - 26053:26053
@@ -33,10 +38,12 @@ services:
       - mongo-config-server-3-store:/data/db
     networks:
       - mongonetwork
-      
+
+  # Servidor de shard, habilita essa função através do --shardsvr      
   mongo-shard-server-1:
     image: mongo:latest
     container_name: mongo-shard-server-1
+    # O comando --replSet rs-shard-1 faz esse node ser parte do replicaSet que chama "rs-shard-1"
     command: --shardsvr --port 28051 --logpath /data/db/log_s1.txt --logappend --oplogSize 50 --replSet rs-shard-1
     ports:
       - 28051:28051
@@ -48,6 +55,7 @@ services:
   mongo-shard-server-1-repl:
     image: mongo:latest
     container_name: mongo-shard-server-1-repl
+    # O comando --replSet rs-shard-1 faz esse node ser parte do replicaSet que chama "rs-shard-1"
     command: --shardsvr --port 28052 --logpath /data/db/log_s1.txt --logappend --oplogSize 50 --replSet rs-shard-1
     ports:
       - 28052:28052
@@ -59,6 +67,7 @@ services:
   mongo-shard-server-2:
     image: mongo:latest
     container_name: mongo-shard-server-2
+    # O comando --replSet rs-shard-2 faz esse node ser parte do replicaSet que chama "rs-shard-2"
     command: --shardsvr --port 28053 --logpath /data/db/log_s2.txt --logappend --oplogSize 50 --replSet rs-shard-2
     ports:
       - 28053:28053
@@ -70,6 +79,7 @@ services:
   mongo-shard-server-2-repl:
     image: mongo:latest
     container_name: mongo-shard-server-2-repl
+    # O comando --replSet rs-shard-2 faz esse node ser parte do replicaSet que chama "rs-shard-2"
     command: --shardsvr --port 28054 --logpath /data/db/log_s2.txt --logappend --oplogSize 50 --replSet rs-shard-2
     ports:
       - 28054:28054
@@ -81,6 +91,7 @@ services:
   mongo-shard-server-3:
     image: mongo:latest
     container_name: mongo-shard-server-3
+    # O comando --replSet rs-shard-3 faz esse node ser parte do replicaSet que chama "rs-shard-3"
     command: --shardsvr --port 28055 --logpath /data/db/log_s3.txt --logappend --oplogSize 50 --replSet rs-shard-3
     ports:
       - 28055:28055
@@ -92,6 +103,7 @@ services:
   mongo-shard-server-3-repl:
     image: mongo:latest
     container_name: mongo-shard-server-3-repl
+    # O comando --replSet rs-shard-3 faz esse node ser parte do replicaSet que chama "rs-shard-3"
     command: --shardsvr --port 28056 --logpath /data/db/log_s3.txt --logappend --oplogSize 50 --replSet rs-shard-3
     ports:
       - 28056:28056
@@ -100,9 +112,12 @@ services:
     networks:
       - mongonetwork
 
+  # Servidor de roteamento note que executa comandos a partir de "mongos"
   mongo-router-server:
     image: mongo:latest
     container_name: mongo-router-server
+    # O parâmetro --configdb deve informar todos os nodes de configuração da seguinte forma nomeReplicaSet/nomeNode:porta,nodeNode:porta... 
+    # o parâmetro --bind_ip_all é necessário para aceitar conexão de outros ips, se ele não for passado só aceitará localhost
     command: mongos --port 27000 --configdb conf/mongo-config-server-1:26051,mongo-config-server-2:26052,mongo-config-server-3:26053 --logpath /data/db/log.mongos0 --bind_ip_all
     ports:
       - 27000:27000
